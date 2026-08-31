@@ -110,6 +110,64 @@ add_filter( 'hm_button_icon_mobile_breakpoint', fn (): int => 600 );
 The rule this produces travels with the block stylesheet, so a page with no
 button on it still downloads neither.
 
+## Preparing icons for a collection
+
+This plugin does not register icons; it renders whatever is in the registry. But
+what the registry accepts is narrow enough to be worth writing down here, since
+it is the plugin's domain rather than any one theme's.
+
+`WP_Icons_Registry::sanitize_icon_content()` runs `wp_kses` allowing only:
+
+| Element   | Attributes                                                                         |
+| --------- | ---------------------------------------------------------------------------------- |
+| `svg`     | `class`, `xmlns`, `width`, `height`, `viewbox`, `aria-hidden`, `role`, `focusable`   |
+| `path`    | `fill`, `fill-rule`, `d`, `transform`                                                |
+| `polygon` | `fill`, `fill-rule`, `points`, `transform`, `focusable`                              |
+
+Everything else is dropped, and the failures are quiet rather than loud. A
+stroke-only icon loses `stroke` and `stroke-width` but keeps a structurally valid
+`<path>`, so it registers cleanly and draws nothing. Art that loses the scale
+putting it on the collection's grid keeps every path it had and renders cropped.
+
+So artwork wants converting to fill-only geometry on one grid before it is
+registered, and it wants optimising with a config that knows about the above.
+Four SVGO preset defaults have to be off:
+
+```js
+// svgo.config.mjs
+export default {
+	multipass: true,
+	floatPrecision: 3,
+	plugins: [
+		{
+			name: 'preset-default',
+			params: {
+				overrides: {
+					// Without a viewBox an icon draws at its raw coordinates
+					// wherever it is parsed as XML rather than as HTML.
+					removeViewBox: false,
+
+					// Both can introduce a <g> to hold shared attributes, and
+					// <g> is stripped along with everything on it.
+					moveElemsAttrsToGroup: false,
+					moveGroupAttrsToElems: false,
+
+					// `fill="currentColor"` looks redundant to SVGO on a shape
+					// with no stroke. It is what makes an icon follow the
+					// button's text colour through `hm-button-icon--themed`.
+					removeUselessStrokeAndFill: false,
+				},
+			},
+		},
+	],
+};
+```
+
+The invocation belongs wherever the SVG sources live, which is the theme or
+plugin registering the collection, not here. This plugin ships no SVGs of its
+own, and a Composer-installed plugin cannot contribute an npm script to the
+project consuming it.
+
 ## Uploaded SVGs
 
 An uploaded icon is not put through the Icons API allowlist — it keeps its
