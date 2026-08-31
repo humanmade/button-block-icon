@@ -16,8 +16,8 @@ An **Icon** panel on every `core/button`, offering:
   deploy.
 - **Size** — 16, 24 or 32px by default.
 - **Position** — before or after the label.
-- **Hide label on mobile** — clips the label under 782px, leaving the icon. The
-  button keeps its accessible name.
+- **Hide label on mobile** — clips the label below 782px by default, leaving the
+  icon. The button keeps its accessible name, and the breakpoint is filterable.
 
 The two sources are mutually exclusive: choosing one clears the other.
 
@@ -59,10 +59,14 @@ would read as a glitch.
 
 ### Styling
 
-The plugin's stylesheet is deliberately thin: it stops the icon squashing,
-recolours a registered one to `currentcolor`, and clips a hidden label. The
-layout rule that puts the icon and label in a row is written in `:where()`, so
-it holds no specificity and a theme's own button rules always win.
+The plugin's stylesheet is deliberately thin: it stops the icon squashing and
+recolours a registered one to `currentcolor`. The layout rule that puts the icon
+and label in a row is written in `:where()`, so it holds no specificity and a
+theme's own button rules always win.
+
+The rule that clips a hidden label is not in the stylesheet. Its breakpoint is
+filterable and a media query takes no custom property, so it is printed from
+`inc/assets.php` and attached to the same handle.
 
 It is enqueued through `wp_enqueue_block_style()`, so a page with no button on
 it never downloads it.
@@ -93,6 +97,18 @@ add_filter( 'hm_button_icon_sizes', fn (): array => [ 20, 28 ] );
 
 A button set to a size no longer on the list falls back to 24, or to the first
 size offered.
+
+### `hm_button_icon_mobile_breakpoint`
+
+The viewport width below which **Hide label on mobile** clips the label.
+Defaults to `782`, the width core treats as the top of mobile.
+
+```php
+add_filter( 'hm_button_icon_mobile_breakpoint', fn (): int => 600 );
+```
+
+The rule this produces travels with the block stylesheet, so a page with no
+button on it still downloads neither.
 
 ## Uploaded SVGs
 

@@ -61,6 +61,13 @@ lives in the admin page, the canvas in the editor iframe, and
 `enqueue_block_editor_assets` never fires inside the iframe. The header comment in
 that file explains it. Do not dedupe.
 
+**The hide-label rule is printed from PHP, not compiled.** Its breakpoint is
+filterable through `hm_button_icon_mobile_breakpoint` and a media query takes no
+custom property, so `hide_label_css()` in `inc/assets.php` builds it and
+`wp_add_inline_style()` attaches it to the block stylesheet. `src/style.scss`
+holds a pointer where the rule used to be. Anything else that needs a filtered
+value inside a media query goes the same way.
+
 **The render filter must stay idempotent.** Caches and theme filters can re-enter it,
 hence the `hm-button-icon__label` guard near the top of `render()`.
 

@@ -37,6 +37,14 @@ const HANDLE        = 'hm-button-icon';
 const EDITOR_HANDLE = 'hm-button-icon-editor';
 
 /**
+ * The default width below which a hidden label is clipped.
+ *
+ * 782px is the breakpoint core treats as the top of mobile, which is the one an
+ * editor is already thinking in when they reach for the toggle.
+ */
+const MOBILE_BREAKPOINT = 782;
+
+/**
  * Set up hooks.
  */
 function bootstrap(): void {
@@ -103,10 +111,49 @@ function register_style( string $handle, string $file ): bool {
 }
 
 /**
+ * The viewport width below which a button set to hide its label does so.
+ *
+ * @return int Width in pixels.
+ */
+function mobile_breakpoint(): int {
+	/**
+	 * Filters the viewport width below which a hidden label is clipped.
+	 *
+	 * @param int $breakpoint Width in pixels.
+	 */
+	$breakpoint = absint( apply_filters( 'hm_button_icon_mobile_breakpoint', MOBILE_BREAKPOINT ) );
+
+	// A filter returning nothing usable would otherwise write `width < 0px`,
+	// which reads as the feature being quietly off rather than as a mistake.
+	return $breakpoint > 0 ? $breakpoint : MOBILE_BREAKPOINT;
+}
+
+/**
+ * The hide-label rule, which cannot be written in the stylesheet.
+ *
+ * A media query takes no custom property, so a filtered breakpoint has to be
+ * printed rather than compiled, and the rule moves here whole rather than being
+ * split across two files.
+ *
+ * The label is clipped rather than hidden with `display: none`, so the button
+ * keeps its accessible name. The icon beside it is decorative and marked
+ * `aria-hidden`, which would otherwise leave the control announcing nothing.
+ *
+ * @return string CSS, for the block stylesheet to carry.
+ */
+function hide_label_css(): string {
+	return sprintf(
+		'@media (width < %dpx){.hm-has-button-icon--hide-label .hm-button-icon__label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%%);white-space:nowrap;}}',
+		mobile_breakpoint()
+	);
+}
+
+/**
  * Register both stylesheets and attach them to core/button.
  */
 function register_styles(): void {
 	if ( register_style( HANDLE, 'build/style-index.css' ) ) {
+		wp_add_inline_style( HANDLE, hide_label_css() );
 		wp_enqueue_block_style( Attributes\BLOCK, [ 'handle' => HANDLE ] );
 	}
 

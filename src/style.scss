@@ -43,25 +43,9 @@
 }
 
 /**
- * Hide the label on mobile.
+ * Hiding the label on mobile is not here.
  *
- * Clipped rather than `display: none`, so the button keeps its accessible
- * name — the icon is decorative and marked `aria-hidden`, which would otherwise
- * leave the control with nothing to announce.
- *
- * 781px is the breakpoint core uses for the same distinction, which is the one
- * an editor is already thinking in when they reach for this toggle.
+ * The breakpoint is filterable through `hm_button_icon_mobile_breakpoint`, and
+ * a media query takes no custom property, so the rule is printed from
+ * `inc/assets.php` and rides along with this stylesheet.
  */
-@media (width <= 781px) {
-
-	.hm-has-button-icon--hide-label .hm-button-icon__label {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-		white-space: nowrap;
-	}
-}
