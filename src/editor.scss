@@ -1,0 +1,78 @@
+/**
+ * Editor canvas and inspector.
+ *
+ * The front end gets a real inline `<svg>` from `render_block`, but the canvas
+ * cannot have one: core renders the button's label as the
+ * `wp-block-button__link` element itself with `contenteditable="true"`, so
+ * anything injected inside it would become part of the text being edited. A
+ * pseudo-element sits outside the editable content, which is why the preview is
+ * drawn rather than inserted.
+ *
+ * The icon arrives as a custom property on the block wrapper, set by the
+ * `editor.BlockListBlock` filter in `index.js` — a data URI for a registered
+ * icon, the attachment URL for an uploaded one.
+ *
+ * Rules are ordered by ascending specificity.
+ */
+
+.wp-block-button.hm-has-button-icon > .wp-block-button__link::before {
+	content: "";
+	flex-shrink: 0;
+	width: var(--hm-button-icon-size, 24px);
+	height: var(--hm-button-icon-size, 24px);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+
+	/* Which side the icon falls on is flex `order` here, not source order. The
+	   front end writes the label and the icon in the order they should appear,
+	   which is the sturdier mechanism, but it needs two real elements to
+	   reorder — and here there is only ever one, plus a pseudo-element that is
+	   always first. */
+	order: -1;
+}
+
+/**
+ * Registered icons are recoloured to the button's text colour, matching what
+ * `hm-button-icon--themed` does on the front end. A mask rather than a
+ * background image, because a `fill` inside a data URI cannot inherit
+ * `currentcolor` across the document boundary.
+ */
+.wp-block-button.hm-has-button-icon--themed > .wp-block-button__link::before {
+	background-color: currentcolor;
+	mask-image: var(--hm-button-icon);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+}
+
+/* Uploaded icons keep the colours they were drawn with, as on the front end. */
+.wp-block-button.hm-has-button-icon--custom > .wp-block-button__link::before {
+	background-image: var(--hm-button-icon);
+}
+
+.wp-block-button.hm-has-button-icon.hm-has-button-icon--right > .wp-block-button__link::before {
+	order: 1;
+}
+
+/**
+ * The inspector.
+ *
+ * The picker grid and the chosen-icon preview. Inline styles would do, but they
+ * are the one part of this UI a host site might reasonably want to restyle.
+ */
+.hm-button-icon-library {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.hm-button-icon-library__item {
+	height: 64px;
+	justify-content: center;
+}
+
+.hm-button-icon-preview {
+	margin: 16px 0;
+}

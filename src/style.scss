@@ -1,0 +1,67 @@
+/**
+ * Front end and editor canvas.
+ *
+ * Deliberately thin. The plugin owns what the icon needs in order to be an
+ * icon — that it does not squash, that a registered one takes the button's
+ * colour, and that a hidden label stays available to a screen reader. How the
+ * button itself looks is the theme's business.
+ *
+ * The layout rule is written in `:where()` so it holds no specificity at all.
+ * A theme that already lays its buttons out as a flex row overrides it with
+ * any selector it likes; one that does not gets a sensible arrangement free.
+ */
+:where(.hm-has-button-icon) > :where(.wp-block-button__link) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5em;
+}
+
+/**
+ * Which side the icon falls on is the order `render_block` writes the two
+ * children in, not a flex direction, so there is nothing here to invert.
+ */
+.hm-button-icon {
+	flex-shrink: 0;
+}
+
+/**
+ * Only icons from a registered collection opt into this. The Icons API strips
+ * everything but fill geometry, so recolouring one is always right, and it is
+ * what keeps it tracking the label through hover, active and disabled.
+ *
+ * An uploaded SVG keeps whatever it was drawn with — it may carry a gradient or
+ * a brand colour — so an upload meant to follow the button should be authored
+ * with `fill="currentColor"`.
+ */
+.hm-button-icon--themed {
+
+	path,
+	polygon {
+		fill: currentcolor;
+	}
+}
+
+/**
+ * Hide the label on mobile.
+ *
+ * Clipped rather than `display: none`, so the button keeps its accessible
+ * name — the icon is decorative and marked `aria-hidden`, which would otherwise
+ * leave the control with nothing to announce.
+ *
+ * 781px is the breakpoint core uses for the same distinction, which is the one
+ * an editor is already thinking in when they reach for this toggle.
+ */
+@media (width <= 781px) {
+
+	.hm-has-button-icon--hide-label .hm-button-icon__label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+}
