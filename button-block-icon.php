@@ -3,7 +3,7 @@
  * Plugin Name: Button Block Icon
  * Plugin URI: https://github.com/humanmade/button-block-icon
  * Description: Puts an icon beside the label on core/button, chosen from a registered icon collection or uploaded as a one-off SVG.
- * Version: 0.1.0
+ * Version: 1.0.0
  * Requires at least: 7.1
  * Requires PHP: 8.3
  * Author: Human Made Limited
@@ -20,7 +20,7 @@ declare( strict_types=1 );
 
 namespace HM\Button_Icon;
 
-const VERSION = '0.1.0';
+const VERSION = '1.0.0';
 
 /**
  * The plugin's own directory, with a trailing slash.
