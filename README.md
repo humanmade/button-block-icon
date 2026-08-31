@@ -101,9 +101,11 @@ strokes, groups and gradients and renders as authored. That is the point of the
 escape hatch, and it also means it does **not** follow the button's colour; an
 upload meant to should be drawn with `fill="currentColor"`.
 
-The plugin does not sanitise uploads. A site allowing SVG uploads at all should
-be running something that does, such as `safe-svg` — the same requirement SVG
-uploads carry without this plugin.
+The plugin does not sanitise uploads, and it inlines the file rather than
+referencing it, so anything inside the SVG runs as part of the page where the
+same file behind an `<img>` would not. A site allowing SVG uploads at all should
+be running something that sanitises them on upload, such as `safe-svg`.
+[SECURITY.md](SECURITY.md) sets out the precondition and the ways to close it.
 
 ## Attributes
 
@@ -125,11 +127,50 @@ is the Human Made house convention and keeps the generated class names legible.
 
 ## Install
 
+The package is not on public Packagist, so point Composer at the repository
+first:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/humanmade/button-block-icon"
+        }
+    ]
+}
+```
+
+Then:
+
 ```
 composer require humanmade/button-block-icon
 ```
 
+It is typed `wordpress-plugin` and requires `composer/installers`, so it lands
+in `wp-content/plugins/button-block-icon` unless the root `composer.json`
+overrides `installer-paths`. The site needs PHP 8.3 or later, and WordPress 7.1
+or later for the Icons API.
+
+Composer does not build the editor assets. A checkout installed this way still
+needs the build below, either run in place or run in CI and shipped with the
+deploy. Without it the plugin loads and renders no icon, since every enqueue is
+guarded on the built file being there.
+
 Or clone it into `wp-content/plugins/` and run the build below.
+
+## Development install
+
+```
+composer install
+npm ci
+```
+
+`composer install` brings in `humanmade/coding-standards`, which registers the
+HM standard that `composer lint` runs, and
+`dealerdirect/phpcodesniffer-composer-installer`, which is what wires that
+standard into PHPCS. Both are already allowed in `config.allow-plugins`, so the
+install needs no prompt answered.
 
 ## Build
 
