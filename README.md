@@ -255,3 +255,14 @@ npm run build     # or `npm run start` to watch
 
 Output lands in `build/`, which is not committed. `npm run lint` covers JS and
 CSS; `composer lint` runs PHPCS against the Human Made standard.
+
+## Releases
+
+Bump the version in the plugin header and in the `VERSION` constant, then push a
+`v<version>` tag. `.github/workflows/release.yml` refuses a tag that disagrees
+with either of them, builds the assets, and attaches
+`button-block-icon-<version>.zip` to that tag's release, creating a draft if
+there is not one already.
+
+That zip is the artifact to install. The source archives GitHub generates carry
+no `build/`, since it is not committed, and a plugin without it renders no icon.

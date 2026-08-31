@@ -29,6 +29,11 @@ There are no automated tests, no test runner and no `wp-env` setup. CI
 (`.github/workflows/ci.yml`) runs `lint:js`, `lint:css`, `build`, then
 `composer lint`. Do not invent a test command.
 
+Releases come from pushing a `v<version>` tag, which runs
+`.github/workflows/release.yml`: it fails the tag unless both the plugin header
+and the `VERSION` constant say the same version, then builds and attaches the
+installable zip. Bump both strings in the same commit the tag points at.
+
 Every enqueue in `inc/assets.php` is guarded on `is_readable`, so an unbuilt
 checkout renders no icon and raises no error. Check `build/` exists before
 debugging a missing icon.

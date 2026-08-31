@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build and attach the plugin zip
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # The tag is what everyone installs, so it has to agree with the two
+      # places the version is written. `VERSION` is also the cache buster the
+      # stylesheets fall back to, so a stale one is not only cosmetic.
+      - name: Check the tag matches the plugin version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -q "^ \* Version: ${VERSION}$" button-block-icon.php \
+            || { echo "Plugin header does not say ${VERSION}"; exit 1; }
+          grep -q "^const VERSION = '${VERSION}';$" button-block-icon.php \
+            || { echo "VERSION constant does not say ${VERSION}"; exit 1; }
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      # build/ is not committed, so the source archives GitHub generates carry
+      # no assets. This zip is the only artifact that installs and works.
+      - name: Build
+        run: npm run build
+
+      - name: Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist/button-block-icon
+          cp button-block-icon.php README.md SECURITY.md LICENSE composer.json dist/button-block-icon/
+          cp -R inc build dist/button-block-icon/
+          cd dist && zip -rq "../button-block-icon-${VERSION}.zip" button-block-icon
+
+      # A release cut by hand already exists, so upload into it rather than
+      # failing; a tag pushed on its own gets a draft to write notes in.
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ZIP="button-block-icon-${VERSION}.zip"
+
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" "${ZIP}" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" "${ZIP}" \
+              --draft \
+              --title "${VERSION}" \
+              --generate-notes
+          fi
