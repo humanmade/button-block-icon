@@ -30,7 +30,6 @@ import {
 	SearchControl,
 	SelectControl,
 	Spinner,
-	ToggleControl,
 } from '@wordpress/components';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { store as coreStore } from '@wordpress/core-data';
@@ -62,6 +61,33 @@ const NO_ICON = {
 	hmIconId: 0,
 	hmIconUrl: '',
 };
+
+/**
+ * Resolve a button's effective label visibility.
+ *
+ * Mirrors `Render\label_visibility()` in `inc/render.php`, and for the same
+ * reason: a button saved before `hmLabelVisibility` existed carries only
+ * `hmHideLabelOnMobile`, and this keeps the radio control landing on the same
+ * choice the front end renders. An explicit `'hidden'` or an explicit
+ * `'mobile'` always wins, and `'visible'` only counts once the legacy flag is
+ * confirmed clear.
+ *
+ * @param {Object} attributes The block's attributes.
+ * @return {string} One of 'visible', 'mobile', 'hidden'.
+ */
+function resolveLabelVisibility( attributes ) {
+	const { hmLabelVisibility, hmHideLabelOnMobile } = attributes;
+
+	if ( 'hidden' === hmLabelVisibility ) {
+		return 'hidden';
+	}
+
+	if ( 'visible' === hmLabelVisibility && ! hmHideLabelOnMobile ) {
+		return 'visible';
+	}
+
+	return 'mobile';
+}
 
 /**
  * The queries that cover the offered collections.
@@ -394,22 +420,43 @@ const withIconControls = createHigherOrderComponent(
 									}
 								/>
 
-								<ToggleControl
-									__nextHasNoMarginBottom
-									label={ __(
-										'Hide label on mobile',
-										'button-block-icon'
-									) }
+								<RadioControl
+									label={ __( 'Label', 'button-block-icon' ) }
 									help={ __(
-										'Leaves the icon alone on small screens. The label stays available to screen readers.',
+										'A hidden label stays available to screen readers.',
 										'button-block-icon'
 									) }
-									checked={
-										!! attributes.hmHideLabelOnMobile
-									}
+									options={ [
+										{
+											label: __(
+												'Visible',
+												'button-block-icon'
+											),
+											value: 'visible',
+										},
+										{
+											label: __(
+												'Hide below 782px',
+												'button-block-icon'
+											),
+											value: 'mobile',
+										},
+										{
+											label: __(
+												'Always hide',
+												'button-block-icon'
+											),
+											value: 'hidden',
+										},
+									] }
+									selected={ resolveLabelVisibility(
+										attributes
+									) }
 									onChange={ ( value ) =>
 										setAttributes( {
-											hmHideLabelOnMobile: value,
+											hmLabelVisibility: value,
+											hmHideLabelOnMobile:
+												'mobile' === value,
 										} )
 									}
 								/>

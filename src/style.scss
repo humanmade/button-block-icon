@@ -49,3 +49,21 @@
  * a media query takes no custom property, so the rule is printed from
  * `inc/assets.php` and rides along with this stylesheet.
  */
+
+/**
+ * Hiding the label always has no breakpoint to be filterable about, so it is a
+ * plain compiled rule rather than a printed one. Clipped, not `display: none`,
+ * so the button keeps its accessible name — the icon beside it is decorative
+ * and marked `aria-hidden`, which would otherwise leave the control announcing
+ * nothing at all.
+ */
+.hm-has-button-icon--hide-label-always .hm-button-icon__label {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

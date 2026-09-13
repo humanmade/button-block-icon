@@ -66,6 +66,20 @@ function definitions(): array {
 			'type'    => 'number',
 			'default' => 24,
 		],
+		'hmLabelVisibility'   => [
+			'type'    => 'string',
+			'enum'    => [ 'visible', 'mobile', 'hidden' ],
+			'default' => 'visible',
+		],
+
+		/*
+		 * Deprecated since the `hmLabelVisibility` enum replaced it. Kept
+		 * registered, and still read by `Render\label_visibility()`, so a
+		 * button saved before that enum existed keeps rendering the same way:
+		 * `true` here and no `hmLabelVisibility` in the comment resolves to
+		 * `'mobile'`. Never written by the editor for a button saved from
+		 * here on.
+		 */
 		'hmHideLabelOnMobile' => [
 			'type'    => 'boolean',
 			'default' => false,

@@ -69,8 +69,12 @@ function render( $block_content, array $block ): string {
 			$tags->add_class( 'hm-has-button-icon--right' );
 		}
 
-		if ( ! empty( $attributes['hmHideLabelOnMobile'] ) ) {
+		$visibility = label_visibility( $attributes );
+
+		if ( 'mobile' === $visibility ) {
 			$tags->add_class( 'hm-has-button-icon--hide-label' );
+		} elseif ( 'hidden' === $visibility ) {
+			$tags->add_class( 'hm-has-button-icon--hide-label-always' );
 		}
 	}
 
@@ -98,6 +102,34 @@ function render( $block_content, array $block ): string {
 		$block_content,
 		1
 	);
+}
+
+/**
+ * Resolve a button's effective label visibility.
+ *
+ * `hmLabelVisibility` is the current attribute, but a button saved before it
+ * existed carries only `hmHideLabelOnMobile`, and `$block['attrs']` on the
+ * front end is the raw comment JSON, never merged against registered
+ * defaults — see the file docblock in `inc/attributes.php`. So an explicit
+ * `'hidden'` or an explicit `'mobile'` always wins, and a `'visible'` only
+ * counts once the legacy flag is confirmed clear; otherwise the legacy flag
+ * decides, exactly as it did before this attribute existed.
+ *
+ * @param array $attributes The block's attributes.
+ * @return string One of 'visible', 'mobile', 'hidden'.
+ */
+function label_visibility( array $attributes ): string {
+	$visibility = $attributes['hmLabelVisibility'] ?? 'visible';
+
+	if ( 'hidden' === $visibility ) {
+		return 'hidden';
+	}
+
+	if ( 'visible' === $visibility && empty( $attributes['hmHideLabelOnMobile'] ) ) {
+		return 'visible';
+	}
+
+	return 'mobile';
 }
 
 /**
