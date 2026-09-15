@@ -66,6 +66,16 @@ function definitions(): array {
 			'type'    => 'number',
 			'default' => 24,
 		],
+
+		/*
+		 * Only meaningful for a registered icon: an uploaded SVG keeps
+		 * whatever colour it was drawn with. Empty means the icon keeps
+		 * taking the button's own text colour, exactly as it always has.
+		 */
+		'hmIconColor'         => [
+			'type'    => 'string',
+			'default' => '',
+		],
 		'hmLabelVisibility'   => [
 			'type'    => 'string',
 			'enum'    => [ 'visible', 'mobile', 'hidden' ],

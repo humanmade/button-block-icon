@@ -15,6 +15,10 @@ An **Icon** panel on every `core/button`, offering:
 - **Upload SVG** — an attachment, for the one-off that does not justify a
   deploy.
 - **Size** — 16, 24 or 32px by default.
+- **Color** — a registered icon only. It defaults to following the button's
+  own text colour through hover, active and disabled; picking one overrides
+  that. An uploaded SVG keeps whatever colour it was drawn with, so it has no
+  color control.
 - **Position** — before or after the label.
 - **Label** — visible (the default), hidden below 782px by default (the
   breakpoint is filterable), or always hidden. A hidden label stays available
@@ -51,7 +55,7 @@ Markup, for a left-positioned registered icon:
 | `hm-has-button-icon--hide-label-always` | wrapper | Label always clipped |
 | `hm-has-button-icon--themed` / `--custom` | wrapper, editor only | Which source the canvas preview is drawing |
 | `hm-button-icon` | the `<svg>` | Every icon |
-| `hm-button-icon--themed` | the `<svg>` | Registered icon, recoloured to the button's text colour |
+| `hm-button-icon--themed` | the `<svg>` | Registered icon, recoloured to the button's text colour, or to its own **Color** override |
 | `hm-button-icon--<slug>` | the `<svg>` | The icon's own slug, so a theme can single one out |
 | `hm-button-icon__label` | `<span>` | The label, wrapped |
 
@@ -65,6 +69,10 @@ The plugin's stylesheet is deliberately thin: it stops the icon squashing and
 recolours a registered one to `currentcolor`. The layout rule that puts the icon
 and label in a row is written in `:where()`, so it holds no specificity and a
 theme's own button rules always win.
+
+A **Color** override does not add a class or a rule; it is a `style="color: …"`
+on the `<svg>` itself, which is what `currentcolor` then resolves to instead of
+the button's own text colour.
 
 The rule that clips a hidden label is not in the stylesheet. Its breakpoint is
 filterable and a media query takes no custom property, so it is printed from
