@@ -22,7 +22,9 @@ import {
 } from '@wordpress/block-editor';
 import { registerBlockVariation } from '@wordpress/blocks';
 import {
+	BaseControl,
 	Button,
+	ColorPalette,
 	Flex,
 	Modal,
 	PanelBody,
@@ -30,9 +32,8 @@ import {
 	SearchControl,
 	SelectControl,
 	Spinner,
-	ToggleControl,
 } from '@wordpress/components';
-import { createHigherOrderComponent } from '@wordpress/compose';
+import { createHigherOrderComponent, useInstanceId } from '@wordpress/compose';
 import { store as coreStore } from '@wordpress/core-data';
 import { useSelect } from '@wordpress/data';
 import { useMemo, useState } from '@wordpress/element';
@@ -62,6 +63,33 @@ const NO_ICON = {
 	hmIconId: 0,
 	hmIconUrl: '',
 };
+
+/**
+ * Resolve a button's effective label visibility.
+ *
+ * Mirrors `Render\label_visibility()` in `inc/render.php`, and for the same
+ * reason: a button saved before `hmLabelVisibility` existed carries only
+ * `hmHideLabelOnMobile`, and this keeps the radio control landing on the same
+ * choice the front end renders. An explicit `'hidden'` or an explicit
+ * `'mobile'` always wins, and `'visible'` only counts once the legacy flag is
+ * confirmed clear.
+ *
+ * @param {Object} attributes The block's attributes.
+ * @return {string} One of 'visible', 'mobile', 'hidden'.
+ */
+function resolveLabelVisibility( attributes ) {
+	const { hmLabelVisibility, hmHideLabelOnMobile } = attributes;
+
+	if ( 'hidden' === hmLabelVisibility ) {
+		return 'hidden';
+	}
+
+	if ( 'visible' === hmLabelVisibility && ! hmHideLabelOnMobile ) {
+		return 'visible';
+	}
+
+	return 'mobile';
+}
 
 /**
  * The queries that cover the offered collections.
@@ -260,7 +288,7 @@ function IconLibrary( { onSelect, onClose } ) {
  */
 function IconPreview( { attributes } ) {
 	const { icons } = useCollectionIcons();
-	const { hmIconName, hmIconUrl } = attributes;
+	const { hmIconName, hmIconUrl, hmIconColor } = attributes;
 
 	if ( hmIconName ) {
 		const icon = icons.find( ( { name } ) => name === hmIconName );
@@ -271,6 +299,18 @@ function IconPreview( { attributes } ) {
 
 		return (
 			<span
+				// `hm-button-icon--themed` is what makes `src/style.scss`
+				// force every path and polygon to `currentcolor`; only add it
+				// once there is an override colour for that keyword to
+				// resolve to, or the preview would recolour to whatever the
+				// sidebar itself inherits instead of showing the icon's own
+				// registered fills.
+				className={
+					hmIconColor
+						? 'hm-button-icon hm-button-icon--themed'
+						: 'hm-button-icon'
+				}
+				style={ hmIconColor ? { color: hmIconColor } : undefined }
 				// See the note in IconLibrary: this markup is sanitised by core.
 				dangerouslySetInnerHTML={ {
 					__html: sizedIcon( icon.content, 32 ),
@@ -289,6 +329,10 @@ function IconPreview( { attributes } ) {
 const withIconControls = createHigherOrderComponent(
 	( BlockEdit ) => ( props ) => {
 		const [ isLibraryOpen, setLibraryOpen ] = useState( false );
+		const colorControlId = useInstanceId(
+			withIconControls,
+			'hm-button-icon-color'
+		);
 
 		if ( props.name !== BLOCK ) {
 			return <BlockEdit { ...props } />;
@@ -339,7 +383,12 @@ const withIconControls = createHigherOrderComponent(
 								<Button
 									isDestructive
 									variant="tertiary"
-									onClick={ () => setAttributes( NO_ICON ) }
+									onClick={ () =>
+										setAttributes( {
+											...NO_ICON,
+											hmIconColor: '',
+										} )
+									}
 								>
 									{ __( 'Remove', 'button-block-icon' ) }
 								</Button>
@@ -351,6 +400,28 @@ const withIconControls = createHigherOrderComponent(
 								<div className="hm-button-icon-preview">
 									<IconPreview attributes={ attributes } />
 								</div>
+
+								{ /* An uploaded SVG keeps whatever colour it was drawn
+								   with, so this only applies to a registered icon. */ }
+								{ attributes.hmIconName && (
+									<BaseControl
+										__nextHasNoMarginBottom
+										id={ colorControlId }
+										label={ __(
+											'Color',
+											'button-block-icon'
+										) }
+									>
+										<ColorPalette
+											value={ attributes.hmIconColor }
+											onChange={ ( value ) =>
+												setAttributes( {
+													hmIconColor: value ?? '',
+												} )
+											}
+										/>
+									</BaseControl>
+								) }
 
 								<SelectControl
 									__next40pxDefaultSize
@@ -394,22 +465,43 @@ const withIconControls = createHigherOrderComponent(
 									}
 								/>
 
-								<ToggleControl
-									__nextHasNoMarginBottom
-									label={ __(
-										'Hide label on mobile',
-										'button-block-icon'
-									) }
+								<RadioControl
+									label={ __( 'Label', 'button-block-icon' ) }
 									help={ __(
-										'Leaves the icon alone on small screens. The label stays available to screen readers.',
+										'A hidden label stays available to screen readers.',
 										'button-block-icon'
 									) }
-									checked={
-										!! attributes.hmHideLabelOnMobile
-									}
+									options={ [
+										{
+											label: __(
+												'Visible',
+												'button-block-icon'
+											),
+											value: 'visible',
+										},
+										{
+											label: __(
+												'Hide below 782px',
+												'button-block-icon'
+											),
+											value: 'mobile',
+										},
+										{
+											label: __(
+												'Always hide',
+												'button-block-icon'
+											),
+											value: 'hidden',
+										},
+									] }
+									selected={ resolveLabelVisibility(
+										attributes
+									) }
 									onChange={ ( value ) =>
 										setAttributes( {
-											hmHideLabelOnMobile: value,
+											hmLabelVisibility: value,
+											hmHideLabelOnMobile:
+												'mobile' === value,
 										} )
 									}
 								/>
@@ -470,7 +562,7 @@ function iconUrlValue( content ) {
  */
 function IconPreviewBlock( { BlockListBlock, ...props } ) {
 	const { icons } = useCollectionIcons();
-	const { hmIconName, hmIconUrl, hmIconSize, hmIconPosition } =
+	const { hmIconName, hmIconUrl, hmIconSize, hmIconPosition, hmIconColor } =
 		props.attributes;
 
 	const source = hmIconName
@@ -512,6 +604,14 @@ function IconPreviewBlock( { BlockListBlock, ...props } ) {
 					...props.wrapperProps?.style,
 					'--hm-button-icon': value,
 					'--hm-button-icon-size': `${ hmIconSize }px`,
+					// A literal fallback, not an omitted property: an empty
+					// custom property is a valid value, not an unset one, so
+					// `var(--hm-button-icon-color, currentcolor)` would not
+					// fall through to the CSS default once React unsets this
+					// after a colour is cleared.
+					...( source && {
+						'--hm-button-icon-color': hmIconColor || 'currentColor',
+					} ),
 				},
 			} }
 		/>

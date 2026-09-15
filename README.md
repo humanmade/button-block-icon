@@ -15,9 +15,14 @@ An **Icon** panel on every `core/button`, offering:
 - **Upload SVG** — an attachment, for the one-off that does not justify a
   deploy.
 - **Size** — 16, 24 or 32px by default.
+- **Color** — a registered icon only. It defaults to following the button's
+  own text colour through hover, active and disabled; picking one overrides
+  that. An uploaded SVG keeps whatever colour it was drawn with, so it has no
+  color control.
 - **Position** — before or after the label.
-- **Hide label on mobile** — clips the label below 782px by default, leaving the
-  icon. The button keeps its accessible name, and the breakpoint is filterable.
+- **Label** — visible (the default), hidden below 782px by default (the
+  breakpoint is filterable), or always hidden. A hidden label stays available
+  to screen readers; only the icon is left on screen.
 
 The two sources are mutually exclusive: choosing one clears the other.
 
@@ -46,10 +51,11 @@ Markup, for a left-positioned registered icon:
 | --- | --- | --- |
 | `hm-has-button-icon` | wrapper | The button carries an icon |
 | `hm-has-button-icon--right` | wrapper | Icon after the label |
-| `hm-has-button-icon--hide-label` | wrapper | Label clipped on mobile |
+| `hm-has-button-icon--hide-label` | wrapper | Label clipped below the mobile breakpoint |
+| `hm-has-button-icon--hide-label-always` | wrapper | Label always clipped |
 | `hm-has-button-icon--themed` / `--custom` | wrapper, editor only | Which source the canvas preview is drawing |
 | `hm-button-icon` | the `<svg>` | Every icon |
-| `hm-button-icon--themed` | the `<svg>` | Registered icon, recoloured to the button's text colour |
+| `hm-button-icon--themed` | the `<svg>` | Registered icon, recoloured to the button's text colour, or to its own **Color** override |
 | `hm-button-icon--<slug>` | the `<svg>` | The icon's own slug, so a theme can single one out |
 | `hm-button-icon__label` | `<span>` | The label, wrapped |
 
@@ -63,6 +69,10 @@ The plugin's stylesheet is deliberately thin: it stops the icon squashing and
 recolours a registered one to `currentcolor`. The layout rule that puts the icon
 and label in a row is written in `:where()`, so it holds no specificity and a
 theme's own button rules always win.
+
+A **Color** override does not add a class or a rule; it is a `style="color: …"`
+on the `<svg>` itself, which is what `currentcolor` then resolves to instead of
+the button's own text colour.
 
 The rule that clips a hidden label is not in the stylesheet. Its breakpoint is
 filterable and a media query takes no custom property, so it is printed from
@@ -100,8 +110,9 @@ size offered.
 
 ### `hm_button_icon_mobile_breakpoint`
 
-The viewport width below which **Hide label on mobile** clips the label.
-Defaults to `782`, the width core treats as the top of mobile.
+The viewport width below which a button's label set to **Hide below 782px**
+clips. Defaults to `782`, the width core treats as the top of mobile. Has no
+effect on a label set to **Always hide**, which carries no breakpoint.
 
 ```php
 add_filter( 'hm_button_icon_mobile_breakpoint', fn (): int => 600 );
@@ -183,7 +194,7 @@ be running something that sanitises them on upload, such as `safe-svg`.
 
 ## Attributes
 
-All six serialise into the block comment and are registered server side from
+All seven serialise into the block comment and are registered server side from
 `inc/attributes.php`, which is also where the editor script gets its
 definitions, so the two registrations cannot drift.
 
@@ -197,7 +208,14 @@ is the Human Made house convention and keeps the generated class names legible.
 | `hmIconUrl` | string | `''` |
 | `hmIconPosition` | string | `'left'` |
 | `hmIconSize` | number | `24` |
-| `hmHideLabelOnMobile` | boolean | `false` |
+| `hmLabelVisibility` | string, one of `visible` / `mobile` / `hidden` | `'visible'` |
+| `hmHideLabelOnMobile` | boolean, deprecated | `false` |
+
+`hmHideLabelOnMobile` predates `hmLabelVisibility` and is never written by the
+editor any more. It is still read on the front end: a button saved before
+1.1.0 carries only this flag, and `true` here with no `hmLabelVisibility` in
+the comment resolves to `'mobile'`, so it keeps rendering exactly as it did
+before the enum existed.
 
 ## Install
 

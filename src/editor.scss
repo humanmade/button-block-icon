@@ -39,7 +39,7 @@
  * `currentcolor` across the document boundary.
  */
 .wp-block-button.hm-has-button-icon--themed > .wp-block-button__link::before {
-	background-color: currentcolor;
+	background-color: var(--hm-button-icon-color, currentcolor);
 	mask-image: var(--hm-button-icon);
 	mask-position: center;
 	mask-repeat: no-repeat;

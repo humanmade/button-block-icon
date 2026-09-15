@@ -66,12 +66,24 @@ lives in the admin page, the canvas in the editor iframe, and
 `enqueue_block_editor_assets` never fires inside the iframe. The header comment in
 that file explains it. Do not dedupe.
 
-**The hide-label rule is printed from PHP, not compiled.** Its breakpoint is
-filterable through `hm_button_icon_mobile_breakpoint` and a media query takes no
-custom property, so `hide_label_css()` in `inc/assets.php` builds it and
-`wp_add_inline_style()` attaches it to the block stylesheet. `src/style.scss`
-holds a pointer where the rule used to be. Anything else that needs a filtered
-value inside a media query goes the same way.
+**The hide-label-on-mobile rule is printed from PHP, not compiled.** Its
+breakpoint is filterable through `hm_button_icon_mobile_breakpoint` and a media
+query takes no custom property, so `hide_label_css()` in `inc/assets.php`
+builds it and `wp_add_inline_style()` attaches it to the block stylesheet.
+Anything else that needs a filtered value inside a media query goes the same
+way. The always-hidden rule has no breakpoint to filter, so it is a plain
+compiled rule in `src/style.scss` instead.
+
+**Label visibility is one enum, `hmLabelVisibility`, with one legacy escape
+hatch.** `hmHideLabelOnMobile` predates it and is never written by the editor
+any more, but a button saved before 1.1.0 still carries it and nothing else.
+`Render\label_visibility()` in `inc/render.php` and `resolveLabelVisibility()`
+in `src/index.js` are the same three-line rule kept in two languages: an
+explicit `'hidden'` or `'mobile'` always wins, and `'visible'` only counts once
+the legacy flag is confirmed clear — otherwise the legacy flag decides, which
+is what makes a pre-1.1.0 button keep rendering the way it always did. Change
+one without the other and the editor's radio selection and the front end's
+rendered class stop agreeing.
 
 **The render filter must stay idempotent.** Caches and theme filters can re-enter it,
 hence the `hm-button-icon__label` guard near the top of `render()`.

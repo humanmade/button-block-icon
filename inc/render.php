@@ -69,8 +69,12 @@ function render( $block_content, array $block ): string {
 			$tags->add_class( 'hm-has-button-icon--right' );
 		}
 
-		if ( ! empty( $attributes['hmHideLabelOnMobile'] ) ) {
+		$visibility = label_visibility( $attributes );
+
+		if ( 'mobile' === $visibility ) {
 			$tags->add_class( 'hm-has-button-icon--hide-label' );
+		} elseif ( 'hidden' === $visibility ) {
+			$tags->add_class( 'hm-has-button-icon--hide-label-always' );
 		}
 	}
 
@@ -98,6 +102,34 @@ function render( $block_content, array $block ): string {
 		$block_content,
 		1
 	);
+}
+
+/**
+ * Resolve a button's effective label visibility.
+ *
+ * `hmLabelVisibility` is the current attribute, but a button saved before it
+ * existed carries only `hmHideLabelOnMobile`, and `$block['attrs']` on the
+ * front end is the raw comment JSON, never merged against registered
+ * defaults — see the file docblock in `inc/attributes.php`. So an explicit
+ * `'hidden'` or an explicit `'mobile'` always wins, and a `'visible'` only
+ * counts once the legacy flag is confirmed clear; otherwise the legacy flag
+ * decides, exactly as it did before this attribute existed.
+ *
+ * @param array $attributes The block's attributes.
+ * @return string One of 'visible', 'mobile', 'hidden'.
+ */
+function label_visibility( array $attributes ): string {
+	$visibility = $attributes['hmLabelVisibility'] ?? 'visible';
+
+	if ( 'hidden' === $visibility ) {
+		return 'hidden';
+	}
+
+	if ( 'visible' === $visibility && empty( $attributes['hmHideLabelOnMobile'] ) ) {
+		return 'visible';
+	}
+
+	return 'mobile';
 }
 
 /**
@@ -138,16 +170,73 @@ function icon_markup( array $attributes ): string {
 		$separator = strrpos( $name, '/' );
 		$slug      = sanitize_html_class( false === $separator ? $name : substr( $name, $separator + 1 ) );
 
-		return wp_get_icon(
+		$icon = wp_get_icon(
 			$name,
 			[
 				'size'  => $size,
 				'class' => 'hm-button-icon hm-button-icon--themed hm-button-icon--' . $slug,
 			]
 		);
+
+		$color = sanitize_icon_color( (string) ( $attributes['hmIconColor'] ?? '' ) );
+
+		return '' === $color ? $icon : with_icon_color( $icon, $color );
 	}
 
 	return uploaded_icon_markup( absint( $attributes['hmIconId'] ?? 0 ), $size );
+}
+
+/**
+ * Validate a colour value before it reaches inline markup.
+ *
+ * Accepts what `ColorPalette` in the editor actually hands back: a hex value,
+ * or the `rgb()` / `rgba()` / `hsl()` / `hsla()` a theme.json palette entry
+ * can carry. Anything else — in particular anything that could break out of a
+ * `style` attribute — is rejected outright rather than escaped.
+ *
+ * @param string $color Raw colour value from the block's attributes.
+ * @return string The colour, or '' when it does not look like one.
+ */
+function sanitize_icon_color( string $color ): string {
+	$color = trim( $color );
+
+	if ( '' === $color ) {
+		return '';
+	}
+
+	if ( preg_match( '/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i', $color ) ) {
+		return $color;
+	}
+
+	if ( preg_match( '/^(?:rgb|rgba|hsl|hsla)\(\s*[\d.]+%?(?:\s*,\s*[\d.]+%?){2,3}\s*\)$/i', $color ) ) {
+		return $color;
+	}
+
+	return '';
+}
+
+/**
+ * Override the colour a registered icon takes from the button.
+ *
+ * `.hm-button-icon--themed` in `src/style.scss` recolours every path and
+ * polygon to `currentcolor`; an inline `color` on the `<svg>` root is what
+ * gives that keyword something other than the button's own text colour to
+ * resolve to.
+ *
+ * @param string $svg   Icon markup from `wp_get_icon()`.
+ * @param string $color A colour already validated by `sanitize_icon_color()`.
+ * @return string Icon markup with the colour applied.
+ */
+function with_icon_color( string $svg, string $color ): string {
+	$tags = new WP_HTML_Tag_Processor( $svg );
+
+	if ( ! $tags->next_tag( 'svg' ) ) {
+		return $svg;
+	}
+
+	$tags->set_attribute( 'style', 'color:' . $color . ';' );
+
+	return $tags->get_updated_html();
 }
 
 /**
