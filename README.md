@@ -4,7 +4,7 @@ Puts an icon beside the label on `core/button`, chosen from a collection
 registered with the WordPress Icons API or uploaded as a one-off SVG.
 
 Requires WordPress 7.1 (for `wp_register_icon_collection()` and friends) and
-PHP 8.3. On anything older the plugin registers nothing and says so in the
+PHP 8.2. On anything older the plugin registers nothing and says so in the
 admin.
 
 ## What it adds
@@ -241,7 +241,7 @@ composer require humanmade/button-block-icon
 
 It is typed `wordpress-plugin` and requires `composer/installers`, so it lands
 in `wp-content/plugins/button-block-icon` unless the root `composer.json`
-overrides `installer-paths`. The site needs PHP 8.3 or later, and WordPress 7.1
+overrides `installer-paths`. The site needs PHP 8.2 or later, and WordPress 7.1
 or later for the Icons API.
 
 Composer does not build the editor assets. A checkout installed this way still

@@ -5,7 +5,7 @@
  * Description: Puts an icon beside the label on core/button, chosen from a registered icon collection or uploaded as a one-off SVG.
  * Version: 1.1.0
  * Requires at least: 7.1
- * Requires PHP: 8.3
+ * Requires PHP: 8.2
  * Author: Human Made Limited
  * Author URI: https://humanmade.com
  * License: GPL-2.0-or-later
