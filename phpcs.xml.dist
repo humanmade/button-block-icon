@@ -2,8 +2,8 @@
 <ruleset name="button-block-icon">
 	<description>PHP Coding Standards for Button Block Icon</description>
 
-	<config name="php_version" value="80300"/>
-	<config name="testVersion" value="8.3-"/>
+	<config name="php_version" value="80200"/>
+	<config name="testVersion" value="8.2-"/>
 
 	<arg value="s"/>
 	<arg name="extensions" value="php"/>
