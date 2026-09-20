@@ -16,6 +16,12 @@ disk, and writes its contents into the page as inline SVG. The file is not
 sanitised and is not put through the Icons API allowlist, because keeping
 strokes, groups and gradients is the whole point of the upload escape hatch.
 
+The file's contents are held in the object cache, keyed on the attachment ID
+and its modified time. Sanitising a file that is already uploaded only reaches
+the page once the attachment is updated or the cache is flushed. The mime type
+is checked before the cache is read, so a deleted attachment stops rendering
+straight away.
+
 Inline SVG is part of the document. A `<script>` or an `onload` inside the file
 runs, where the same file referenced through `<img src="...">` would not. So the
 plugin makes an unsanitised SVG in the media library more dangerous than it was
