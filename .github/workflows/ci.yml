@@ -44,5 +44,10 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist
 
+      # PHPCompatibility 9.x predates PHP 8, so it cannot tell when the code
+      # uses syntax newer than the declared floor. The 8.2 parser can.
+      - name: Check PHP syntax
+        run: find button-block-icon.php inc -name '*.php' -print0 | xargs -0 -n1 php -l
+
       - name: Lint PHP
         run: composer lint
