@@ -56,6 +56,7 @@ const SETTINGS = window.hmButtonIcon ?? {};
 const ATTRIBUTES = SETTINGS.attributes ?? {};
 const COLLECTIONS = SETTINGS.collections ?? [];
 const SIZES = SETTINGS.sizes?.length ? SETTINGS.sizes : [ 16, 24, 32 ];
+const MOBILE_BREAKPOINT = SETTINGS.mobileBreakpoint ?? 782;
 
 /** Attribute values that clear whichever source is not in use. */
 const NO_ICON = {
@@ -476,9 +477,13 @@ const withIconControls = createHigherOrderComponent(
 											value: 'visible',
 										},
 										{
-											label: __(
-												'Hide below 782px',
-												'button-block-icon'
+											label: sprintf(
+												/* translators: %d: viewport width in pixels. */
+												__(
+													'Hide below %dpx',
+													'button-block-icon'
+												),
+												MOBILE_BREAKPOINT
 											),
 											value: 'mobile',
 										},

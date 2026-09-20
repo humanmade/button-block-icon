@@ -111,8 +111,9 @@ size offered.
 ### `hm_button_icon_mobile_breakpoint`
 
 The viewport width below which a button's label set to **Hide below 782px**
-clips. Defaults to `782`, the width core treats as the top of mobile. Has no
-effect on a label set to **Always hide**, which carries no breakpoint.
+clips. Defaults to `782`, the width core treats as the top of mobile. The
+option's name in the editor follows the filtered value. Has no effect on a
+label set to **Always hide**, which carries no breakpoint.
 
 ```php
 add_filter( 'hm_button_icon_mobile_breakpoint', fn (): int => 600 );

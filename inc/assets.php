@@ -194,9 +194,10 @@ function enqueue_editor_assets(): void {
 		EDITOR_HANDLE,
 		'window.hmButtonIcon = ' . wp_json_encode(
 			[
-				'attributes'  => Attributes\definitions(),
-				'collections' => Attributes\collections(),
-				'sizes'       => Attributes\sizes(),
+				'attributes'       => Attributes\definitions(),
+				'collections'      => Attributes\collections(),
+				'sizes'            => Attributes\sizes(),
+				'mobileBreakpoint' => mobile_breakpoint(),
 			]
 		) . ';',
 		'before'
