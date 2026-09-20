@@ -13,7 +13,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       # The tag is what everyone installs, so it has to agree with the two
       # places the version is written. `VERSION` is also the cache buster the
@@ -27,7 +27,7 @@ jobs:
             || { echo "VERSION constant does not say ${VERSION}"; exit 1; }
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: '22'
           cache: 'npm'
