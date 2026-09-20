@@ -20,6 +20,8 @@ use function HM\Button_Icon\Attributes\sizes;
 
 use const HM\Button_Icon\Attributes\BLOCK;
 
+const CACHE_GROUP = 'hm-button-icon';
+
 /**
  * Set up hooks.
  */
@@ -257,27 +259,7 @@ function uploaded_icon_markup( $attachment_id, $size ): string {
 		return '';
 	}
 
-	$path = get_attached_file( $attachment_id );
-
-	if ( ! $path || ! is_readable( $path ) ) {
-		return '';
-	}
-
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a local uploaded file, not a remote request.
-	$svg = file_get_contents( $path );
-
-	if ( false === $svg ) {
-		return '';
-	}
-
-	// Drop any XML prolog, DOCTYPE or comment ahead of the root element.
-	$start = strpos( $svg, '<svg' );
-
-	if ( false === $start ) {
-		return '';
-	}
-
-	$tags = new WP_HTML_Tag_Processor( substr( $svg, $start ) );
+	$tags = new WP_HTML_Tag_Processor( uploaded_icon_source( $attachment_id ) );
 
 	if ( ! $tags->next_tag( 'svg' ) ) {
 		return '';
@@ -294,4 +276,55 @@ function uploaded_icon_markup( $attachment_id, $size ): string {
 	$tags->remove_attribute( 'aria-label' );
 
 	return $tags->get_updated_html();
+}
+
+/**
+ * An uploaded SVG's contents, from its root element onwards.
+ *
+ * Cached, because this runs for every button on every uncached page view, and
+ * where uploads live in remote storage such as S3 each read is a network
+ * request. Without a persistent object cache it still saves the repeat reads
+ * when one icon is on several buttons in a page.
+ *
+ * The key carries the attachment's modified time rather than an expiry, so
+ * updating the attachment is what retires an entry. A file swapped in place
+ * with nothing touching the attachment post keeps serving the old contents
+ * until the cache is flushed.
+ *
+ * @param int $attachment_id Attachment ID, already confirmed to be an SVG.
+ * @return string SVG markup, or '' when the file is unreadable or has no root.
+ */
+function uploaded_icon_source( int $attachment_id ): string {
+	$key = $attachment_id . ':' . get_post_modified_time( 'U', true, $attachment_id );
+	$svg = wp_cache_get( $key, CACHE_GROUP );
+
+	if ( is_string( $svg ) ) {
+		return $svg;
+	}
+
+	$path = get_attached_file( $attachment_id );
+
+	if ( ! $path || ! is_readable( $path ) ) {
+		return '';
+	}
+
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading an uploaded file through its stream wrapper, not fetching a URL.
+	$svg = file_get_contents( $path );
+
+	if ( false === $svg ) {
+		return '';
+	}
+
+	// Drop any XML prolog, DOCTYPE or comment ahead of the root element.
+	$start = strpos( $svg, '<svg' );
+
+	if ( false === $start ) {
+		return '';
+	}
+
+	$svg = substr( $svg, $start );
+
+	wp_cache_set( $key, $svg, CACHE_GROUP );
+
+	return $svg;
 }
