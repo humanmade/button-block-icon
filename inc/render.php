@@ -115,8 +115,9 @@ function render( $block_content, array $block ): string {
  * front end is the raw comment JSON, never merged against registered
  * defaults — see the file docblock in `inc/attributes.php`. So an explicit
  * `'hidden'` or an explicit `'mobile'` always wins, and a `'visible'` only
- * counts once the legacy flag is confirmed clear; otherwise the legacy flag
- * decides, exactly as it did before this attribute existed.
+ * counts once the legacy flag is confirmed clear. Otherwise the legacy flag
+ * decides, exactly as it did before this attribute existed. A value outside
+ * the enum is treated as absent, so it never hides a label by itself.
  *
  * @param array $attributes The block's attributes.
  * @return string One of 'visible', 'mobile', 'hidden'.
@@ -124,15 +125,11 @@ function render( $block_content, array $block ): string {
 function label_visibility( array $attributes ): string {
 	$visibility = $attributes['hmLabelVisibility'] ?? 'visible';
 
-	if ( 'hidden' === $visibility ) {
-		return 'hidden';
+	if ( in_array( $visibility, [ 'hidden', 'mobile' ], true ) ) {
+		return $visibility;
 	}
 
-	if ( 'visible' === $visibility && empty( $attributes['hmHideLabelOnMobile'] ) ) {
-		return 'visible';
-	}
-
-	return 'mobile';
+	return empty( $attributes['hmHideLabelOnMobile'] ) ? 'visible' : 'mobile';
 }
 
 /**

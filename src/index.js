@@ -80,15 +80,11 @@ const NO_ICON = {
 function resolveLabelVisibility( attributes ) {
 	const { hmLabelVisibility, hmHideLabelOnMobile } = attributes;
 
-	if ( 'hidden' === hmLabelVisibility ) {
-		return 'hidden';
+	if ( [ 'hidden', 'mobile' ].includes( hmLabelVisibility ) ) {
+		return hmLabelVisibility;
 	}
 
-	if ( 'visible' === hmLabelVisibility && ! hmHideLabelOnMobile ) {
-		return 'visible';
-	}
-
-	return 'mobile';
+	return hmHideLabelOnMobile ? 'mobile' : 'visible';
 }
 
 /**
