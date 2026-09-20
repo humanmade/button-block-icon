@@ -45,8 +45,11 @@ function bootstrap(): void {
  * @return string Filtered block markup.
  */
 function render( $block_content, array $block ): string {
-	$attributes = $block['attrs'] ?? [];
-	$icon       = icon_markup( $attributes );
+	// Another filter on this hook can hand back null, and this runs for every
+	// button on the site, icon or not.
+	$block_content = (string) $block_content;
+	$attributes    = $block['attrs'] ?? [];
+	$icon          = icon_markup( $attributes );
 
 	if ( '' === $icon ) {
 		return $block_content;
