@@ -20,12 +20,6 @@ declare( strict_types=1 );
 
 namespace HM\Button_Icon;
 
-/**
- * The plugin version.
- *
- * Both this and the header say `__VERSION__` on main; the release workflow
- * writes the real number into the tagged commit.
- */
 const VERSION = '__VERSION__';
 
 /**
