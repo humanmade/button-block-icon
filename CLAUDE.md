@@ -22,17 +22,21 @@ composer format             # PHPCBF
 ```
 
 The package is not on public Packagist. `README.md` documents the VCS
-`repositories` entry a consuming site needs, and the fact that Composer installs
-no built assets.
+`repositories` entry a consuming site needs. A tagged version installs with its
+built assets, since the tag commits `build/`; a `dev-main` install does not.
 
 There are no automated tests, no test runner and no `wp-env` setup. CI
 (`.github/workflows/ci.yml`) runs `lint:js`, `lint:css`, `build`, then
 `composer lint`. Do not invent a test command.
 
-Releases come from pushing a `v<version>` tag, which runs
-`.github/workflows/release.yml`: it fails the tag unless both the plugin header
-and the `VERSION` constant say the same version, then builds and attaches the
-installable zip. Bump both strings in the same commit the tag points at.
+Releases are cut by dispatching `.github/workflows/release.yml` from the
+Actions tab with a version. It builds, stamps that version over the
+`__VERSION__` placeholder in the plugin header and the `VERSION` constant,
+commits the built `build/` with it, and tags that commit. Do not bump a version
+by hand and do not push a `v` tag: `main` keeps the placeholder, the number
+lives only in the tag, and a tag that already exists is refused rather than
+moved. What the zip carries is set by `export-ignore` in `.gitattributes`, not
+by the workflow.
 
 Every enqueue in `inc/assets.php` is guarded on `is_readable`, so an unbuilt
 checkout renders no icon and raises no error. Check `build/` exists before

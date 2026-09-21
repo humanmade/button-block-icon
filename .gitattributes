@@ -1,0 +1,14 @@
+# What a release carries.
+#
+# The distribution zip is `git archive` of the tag, so the `export-ignore`
+# rules below are the only place that decides what is left out of it. `build/`
+# is deliberately not ignored: the release tag commits the compiled assets, and
+# a plugin without them renders no icon. `src/` is kept too, so the tagged tree
+# can be rebuilt from itself.
+
+/.github export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/CLAUDE.md export-ignore
+/composer.lock export-ignore
+/phpcs.xml.dist export-ignore

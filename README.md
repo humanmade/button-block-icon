@@ -245,10 +245,13 @@ in `wp-content/plugins/button-block-icon` unless the root `composer.json`
 overrides `installer-paths`. The site needs PHP 8.2 or later, and WordPress 7.1
 or later for the Icons API.
 
-Composer does not build the editor assets. A checkout installed this way still
-needs the build below, either run in place or run in CI and shipped with the
-deploy. Without it the plugin loads and renders no icon, since every enqueue is
-guarded on the built file being there.
+A tagged version carries its own built assets: the release workflow commits
+`build/` into the tag before it is created, so `composer require` on a version
+constraint gives you a plugin that works as installed. A `dev-main` install
+does not, since `build/` is not committed on `main`. That one needs the build
+below, either run in place or run in CI and shipped with the deploy; without it
+the plugin loads and renders no icon, since every enqueue is guarded on the
+built file being there.
 
 Or clone it into `wp-content/plugins/` and run the build below.
 
@@ -277,11 +280,33 @@ CSS; `composer lint` runs PHPCS against the Human Made standard.
 
 ## Releases
 
-Bump the version in the plugin header and in the `VERSION` constant, then push a
-`v<version>` tag. `.github/workflows/release.yml` refuses a tag that disagrees
-with either of them, builds the assets, and attaches
-`button-block-icon-<version>.zip` to that tag's release, creating a draft if
-there is not one already.
+Releases are cut by the **Release** workflow
+(`.github/workflows/release.yml`), run by hand from the Actions tab with the
+version to ship, written `1.2.3` with no leading `v`.
 
-That zip is the artifact to install. The source archives GitHub generates carry
-no `build/`, since it is not committed, and a plugin without it renders no icon.
+It builds the assets, writes that version over the `__VERSION__` placeholder in
+`button-block-icon.php`, commits the built assets and the stamped file, and
+tags *that* commit `v1.2.3`. Only the tag is pushed, so `main` stays where it
+was. It then attaches `button-block-icon-1.2.3.zip` to the release.
+
+Two things follow from building before tagging rather than after. A tag is
+already built and already versioned, so it installs as it stands, whether
+through Composer or as the zip. And the tag is written once and never moved,
+which is what Packagist requires — the workflow refuses a version whose tag
+already exists, so a bad release is superseded by the next patch version rather
+than rewritten.
+
+The version on `main` is always the literal `__VERSION__`, in both the plugin
+header and the `VERSION` constant. The real number exists only inside a tag,
+which is what keeps the two from ever disagreeing.
+
+The zip is `git archive` of the tag, so `.gitattributes` is the single place
+that decides what ships. `build/` and `src/` are both in it; CI config, the
+PHPCS config and `composer.lock` are not. To change what a release carries,
+edit `.gitattributes` — the workflow needs no change.
+
+`.github/workflows/build-and-release.yml` separately keeps a `release` branch
+in step with `main` plus a built `build/`, on every push to `main`. It is there
+for installing the latest built code from a branch. It is not part of cutting a
+release, and it carries the `__VERSION__` placeholder, so it is not a versioned
+artifact.

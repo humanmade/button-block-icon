@@ -1,0 +1,42 @@
+name: Production build
+
+# Keeps a `release` branch that is main plus the compiled `build/` directory,
+# rebuilt on every push to main. It is there for sites that install the plugin
+# from a branch rather than a tag, and it is not part of cutting a release: the
+# Release workflow always builds fresh from main. The branch carries the
+# `__VERSION__` placeholder, so it is not a versioned artifact.
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  release-branch:
+    name: Update the release branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Merge and build
+        uses: humanmade/hm-github-actions/.github/actions/build-to-release-branch@04c32a93e52ae987095f144105745a501d6207c8 # v0.2.0
+        with:
+          source_branch: main
+          release_branch: release
+          built_asset_paths: build
+          build_script: |
+            npm ci
+            npm run build
