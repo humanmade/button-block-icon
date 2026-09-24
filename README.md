@@ -66,9 +66,10 @@ would read as a glitch.
 ### Styling
 
 The plugin's stylesheet is deliberately thin: it stops the icon squashing and
-recolours a registered one to `currentcolor`. The layout rule that puts the icon
-and label in a row is written in `:where()`, so it holds no specificity and a
-theme's own button rules always win.
+recolours a registered one to `currentcolor`. The rule that puts the icon and
+label in a row carries just enough specificity to beat core's own
+`display: inline-block` on the button link. The gap and alignment are written
+in `:where()`, so they hold no specificity and a theme's own button rules win.
 
 A **Color** override does not add a class or a rule; it is a `style="color: …"`
 on the `<svg>` itself, which is what `currentcolor` then resolves to instead of
