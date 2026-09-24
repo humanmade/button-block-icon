@@ -6,13 +6,21 @@
  * colour, and that a hidden label stays available to a screen reader. How the
  * button itself looks is the theme's business.
  *
- * The layout rule is written in `:where()` so it holds no specificity at all.
- * A theme that already lays its buttons out as a flex row overrides it with
- * any selector it likes; one that does not gets a sensible arrangement free.
+ * The row itself needs enough specificity to beat core's button stylesheet,
+ * which sets `display: inline-block` on every `.wp-block-button__link`. Without
+ * the row the icon and label sit side by side as inline boxes, top aligned, so
+ * the icon rides above the text and the button grows taller.
  */
-:where(.hm-has-button-icon) > :where(.wp-block-button__link) {
+.hm-has-button-icon > .wp-block-button__link {
 	display: inline-flex;
 	align-items: center;
+}
+
+/**
+ * The spacing is written in `:where()` so it holds no specificity at all, and a
+ * theme can change it with any selector it likes.
+ */
+:where(.hm-has-button-icon) > :where(.wp-block-button__link) {
 	justify-content: center;
 	gap: 0.5em;
 }

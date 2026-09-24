@@ -93,9 +93,10 @@ rendered class stop agreeing.
 hence the `hm-button-icon__label` guard near the top of `render()`.
 
 **Single-mechanism choices a cleanup would undo:** icon side is the order
-`render()` writes the two children in, not a flex direction. The layout rule in
-`src/style.scss` is wrapped in `:where()` so it carries no specificity and any theme
-rule wins.
+`render()` writes the two children in, not a flex direction. The gap and alignment in
+`src/style.scss` are wrapped in `:where()` so any theme rule wins. The `display` rule
+beside them is not, on purpose: core's button stylesheet sets `display: inline-block`
+on the link, and a zero-specificity rule loses to it on every site.
 
 **Uploaded SVGs are inlined unsanitised, on purpose.** `uploaded_icon_markup()`
 checks the mime type and writes the file into the page, which makes an
